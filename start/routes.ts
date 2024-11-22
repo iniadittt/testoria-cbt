@@ -13,9 +13,9 @@ import { middleware } from './kernel.js'
 
 const GuestController = () => import('#controllers/guests_controller')
 const AuthController = () => import('#controllers/auth_controller')
-const SiswaController = () => import('#controllers/siswas_controller')
-const GuruController = () => import('#controllers/gurus_controller')
-const OperatorController = () => import('#controllers/operators_controller')
+// const SiswaController = () => import('#controllers/siswas_controller')
+// const GuruController = () => import('#controllers/gurus_controller')
+// const OperatorController = () => import('#controllers/operators_controller')
 const AdminController = () => import('#controllers/admin_controller')
 
 router.group(() => {
@@ -33,6 +33,7 @@ router
 router
   .group(() => {
     router.delete('/logout', [AuthController, 'logout']).as('auth.logout')
+    router.post('/upload', [AuthController, 'upload']).as('upload')
   })
   .middleware(middleware.auth())
 
@@ -55,6 +56,12 @@ router
         router
           .patch('/update', [AdminController, 'matapelajaran_update'])
           .as('admin.matapelajaran.update')
+        router
+          .delete('/destroy', [AdminController, 'matapelajaran_destroy'])
+          .as('admin.matapelajaran.destroy')
+        router
+          .delete('/list/destroy', [AdminController, 'matapelajaran_list_destroy'])
+          .as('admin.matapelajaran.list.destroy')
       })
       .prefix('/mata-pelajaran')
 
@@ -65,8 +72,17 @@ router
         router.get('/create', [AdminController, 'kelas_create']).as('admin.kelas.create')
         router.post('/store', [AdminController, 'kelas_store']).as('admin.kelas.store')
         router.patch('/update', [AdminController, 'kelas_update']).as('admin.kelas.update')
+        router.delete('/destroy', [AdminController, 'kelas_destroy']).as('admin.kelas.destroy')
       })
       .prefix('/kelas')
+
+    router
+      .group(() => {
+        router.get('/', [AdminController, 'soal']).as('admin.soal.page')
+        // router.get('/detail', [AdminController, 'soal_detail']).as('admin.soal.detail')
+        router.get('/create', [AdminController, 'soal_create']).as('admin.soal.create')
+      })
+      .prefix('/soal')
   })
 
   .prefix('/panel/admin')

@@ -18,29 +18,17 @@ export default class SiswaUjianSoal extends BaseModel {
   @column({ columnName: 'is_ragu' })
   declare isRagu: boolean
 
-  @column({ columnName: 'is_active' })
-  declare isActive: boolean
-
-  @column({ columnName: 'is_delete' })
-  declare isDelete: boolean
-
   @column({ columnName: 'created_by' })
   declare createdBy: number | null
 
   @column({ columnName: 'updated_by' })
   declare updatedBy: number | null
 
-  @column({ columnName: 'deleted_by' })
-  declare deletedBy: number | null
-
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime | null
-
-  @column.dateTime({ columnName: 'deleted_at' })
-  declare deletedAt: DateTime | null
 
   @belongsTo(() => SiswaUjian, {
     foreignKey: 'siswaUjianId',
@@ -66,9 +54,4 @@ export default class SiswaUjianSoal extends BaseModel {
     foreignKey: 'updatedBy',
   })
   declare updatedByUser: BelongsTo<typeof User>
-
-  @belongsTo(() => User, {
-    foreignKey: 'deletedBy',
-  })
-  declare deletedByUser: BelongsTo<typeof User>
 }

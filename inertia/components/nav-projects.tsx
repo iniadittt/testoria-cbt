@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react'
+import { LucideIcon } from 'lucide-react'
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -5,7 +7,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/shadcn/sidebar'
-import { LucideIcon } from 'lucide-react'
 
 export function NavProjects({
   projects,
@@ -17,16 +18,18 @@ export function NavProjects({
   }[]
 }) {
   return (
-    <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Other</SidebarGroupLabel>
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden p-0">
+      <SidebarGroupLabel className="text-13px font-medium text-black/40 px-4">
+        Other
+      </SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <a href={item.url}>
+            <SidebarMenuButton asChild className="rounded-none px-4">
+              <Link href={item.url}>
                 <item.icon />
-                <span>{item.name}</span>
-              </a>
+                <span className="ml-2 text-13px leading-40">{item.name}</span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         ))}

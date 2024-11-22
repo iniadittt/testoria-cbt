@@ -29,5 +29,7 @@ export interface KelasType {
   deletedAt: string | null
   createdByUser: CreatedByUserType
   guru: GuruType
+  guruFullName: string
   mataPelajaran: MataPelajaranType
+  mataPelajaranName: string
 }

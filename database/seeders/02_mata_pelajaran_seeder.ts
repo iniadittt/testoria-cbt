@@ -15,8 +15,6 @@ export default class extends BaseSeeder {
         // tingkat: Math.floor(Math.random() * 7) + 1,
         semester,
         tahunAjaran,
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }

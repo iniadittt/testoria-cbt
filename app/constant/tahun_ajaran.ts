@@ -7,4 +7,4 @@ for (let i = -range; i <= range; i++) {
 }
 TahunAjaran.sort((a, b) => Number.parseInt(b) - Number.parseInt(a))
 
-export default TahunAjaran
+export { TahunAjaran }

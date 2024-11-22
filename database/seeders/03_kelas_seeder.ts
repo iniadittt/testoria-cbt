@@ -11,8 +11,6 @@ export default class extends BaseSeeder {
         name: `NAMA KELAS ${i}`,
         guruId: jumlahKelas % 2 === 0 ? 3 : 4,
         mataPelajaranId: 1,
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }

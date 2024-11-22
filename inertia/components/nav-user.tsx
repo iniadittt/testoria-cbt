@@ -1,7 +1,8 @@
 'use client'
 
+import React from 'react'
+import { usePage, useForm } from '@inertiajs/react'
 import { ChevronsUpDown, KeyRound, LogOut, UserCog } from 'lucide-react'
-import { usePage } from '@inertiajs/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shadcn/avatar'
 import {
   DropdownMenu,
@@ -14,12 +15,22 @@ import {
 } from '@/shadcn/dropdown-menu'
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/shadcn/sidebar'
 import { AuthenticateUserType } from '@/types/authenticateUser'
+import { RoutesType } from '@/types/route'
 
 export function NavUser() {
+  const { isMobile } = useSidebar()
   const authenticateUser: AuthenticateUserType = usePage().props
     .authenticateUser as AuthenticateUserType
-  const { isMobile } = useSidebar()
   const initialUser = authenticateUser.fullName.split(' ').map((text) => text[0])
+  const routes = usePage().props.routes as RoutesType
+
+  const { delete: destroy } = useForm()
+
+  const handlerLogout = async (event: React.MouseEvent) => {
+    event.preventDefault()
+    destroy(routes.as['auth.logout'])
+  }
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -27,7 +38,7 @@ export function NavUser() {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-none mx-auto"
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
@@ -44,12 +55,12 @@ export function NavUser() {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+            className={`w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-none p-0 ${isMobile ? '-mb-1' : 'm-3 -ml-3'}`}
             side={isMobile ? 'bottom' : 'right'}
             align="end"
             sideOffset={4}
           >
-            <DropdownMenuLabel className="p-0 font-normal">
+            <DropdownMenuLabel className="p-0 font-normal pb-0.5 pt-1.5 px-2">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
@@ -66,21 +77,24 @@ export function NavUser() {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer rounded-none py-2 px-3">
                 <UserCog />
                 Akun Saya
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuGroup>
-              <DropdownMenuItem className="cursor-pointer">
+              <DropdownMenuItem className="cursor-pointer rounded-none py-2 px-3">
                 <KeyRound />
                 Ubah Password
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
+            <DropdownMenuItem
+              className="cursor-pointer rounded-none py-2 px-3 mb-1"
+              onClick={handlerLogout}
+            >
               <LogOut />
-              Log out
+              Keluar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

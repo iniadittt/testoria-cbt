@@ -8,13 +8,18 @@
     <title inertia>
       {{ process.env.APP_NAME }}
     </title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
     @viteReactRefresh()
     @inertiaHead()
     @vite(['inertia/css/app.css', 'inertia/app/app.tsx', 'inertia/app/ssr.tsx', `inertia/pages/${page.component}.tsx`])
   </head>
 
-  <body class="min-h-screen w-screen font-arimo">
+  <body class="w-full h-auto font-inter">
     @inertia()
   </body>
 

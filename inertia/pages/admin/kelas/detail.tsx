@@ -1,39 +1,86 @@
 import React from 'react'
 import { Head, useForm, usePage, Link } from '@inertiajs/react'
 import { AdminLayout } from '@/layouts/admin'
+import { Header } from '@/components/header'
+import { RoutesType } from '@/types/route'
+import { Check, ChevronsUpDown } from 'lucide-react'
 import { Label } from '@/shadcn/label'
 import { Input } from '@/shadcn/input'
 import { Button } from '@/shadcn/button'
-import { RoutesType } from '@/types/route'
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shadcn/select'
-import { ChevronLeft } from 'lucide-react'
-import { MataPelajaranType } from '@/types/mata_pelajaran'
-import { ErrorType } from '@/types/errors'
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/shadcn/command'
+import { cn } from '@/lib/utils'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shadcn/popover'
+
+// =================================================================
+// Interface
+// =================================================================
+
+interface ErrorType {
+  name: string[] | undefined
+  guruId: string[] | undefined
+}
+
+interface OpenType {
+  guru: boolean
+}
+
+interface GuruType {
+  id: number
+  fullName: string
+}
+
+interface MataPelajaranType {
+  id: number
+  name: string
+}
+
+interface KelasType {
+  id: number
+  kode: string
+  name: string
+  guruId: number
+  mataPelajaranId: number
+  createdBy: number
+  updatedBy: number | null
+  createdAt: string
+  updatedAt: string
+  guru: GuruType
+  mataPelajaran: MataPelajaranType
+}
+
+interface DataType {
+  name: string
+  guruId: number | null
+}
+
+// =================================================================
+// Component
+// =================================================================
 
 export default function DashboardAdminCreateKelas({
-  TahunAjaran,
-  mataPelajaran,
+  kelas,
+  guru,
 }: {
-  TahunAjaran: string[]
-  mataPelajaran: MataPelajaranType
+  kelas: KelasType
+  guru: GuruType[]
 }) {
   const errors: any = usePage().props.errors
   const routes = usePage().props.routes as RoutesType
 
   const [ERROR, SETERROR] = React.useState<ErrorType | undefined>()
-
-  const { data, setData, processing, reset, patch } = useForm({
-    name: mataPelajaran.name,
-    tahunAjaran: mataPelajaran.tahunAjaran,
-    tingkat: mataPelajaran.tingkat,
-    semester: mataPelajaran.semester,
+  const [open, setOpen] = React.useState<OpenType>({
+    guru: false,
+  })
+  const { data, setData, processing, reset, patch } = useForm<DataType>({
+    name: kelas.name,
+    guruId: kelas.guruId,
   })
 
   React.useEffect(() => {
@@ -42,144 +89,146 @@ export default function DashboardAdminCreateKelas({
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    patch(`${routes.as['admin.matapelajaran.update']}?id=${mataPelajaran.id}`, {
-      onSuccess: () => reset('name', 'tahunAjaran', 'tingkat', 'semester'),
+    patch(`${routes.as['admin.kelas.update']}?id=${kelas.id}`, {
+      onSuccess: () => reset('name', 'guruId'),
     })
   }
 
   return (
-    <AdminLayout title="Mata Pelajaran">
-      <Head title="Panel Admin Buat Mata Pelajaran" />
-      <Link
-        href={routes.as['admin.matapelajaran.page']}
-        className="underline text-sm flex items-center p-0 m-0 max-w-max mb-4 gap-1"
+    <AdminLayout title="Kelas">
+      <Head title="Detail Kelas - Panel Admin" />
+      <Header
+        title={'Detail Kelas'}
+        back={true}
+        href="admin.kelas.page"
+        refresh={true}
+        refreshUrl={`${routes.as['admin.kelas.detail']}?id=${kelas.id}`}
       >
-        <ChevronLeft className="h-4 max-w-max" />
-        <span>Kembali</span>
-      </Link>
-      <h1 className="font-medium text-lg">Buat Kelas</h1>
-      <p className="text-sm">Buat mata pelajaran baru yang ingin diuji.</p>
-
-      <form
-        onSubmit={submit}
-        className="mt-8 w-full md:w-2/3 lg:w-1/2 2xl:w-1/3 grid grid-cols-1 gap-6"
-      >
-        <div className="grid w-full items-center gap-2">
-          <Label htmlFor="name">Nama Mata Pelajaran</Label>
-          <Input
-            type="text"
-            id="name"
-            placeholder="Masukkan nama mata pelajaran"
-            value={data.name}
-            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-              setData('name', event.target.value)
-              SETERROR((prev: any) => ({ ...prev, name: undefined }))
-            }}
-          />
-          {ERROR?.name && <p className="text-xs text-red-600">* {ERROR?.name[0]}</p>}
+        &nbsp;
+      </Header>
+      <div className="p-6">
+        <h1 className="text-18px leading-24 font-medium">Detail Kelas</h1>
+        <div className="mt-2 flex flex-col gap-2">
+          <p className="text-12px text-black/70">
+            Halaman ini menampilkan detail lengkap mengenai kelas yang tersedia untuk ujian online
+            berbasis komputer (CBT).
+          </p>
+          <p className="text-12px text-black/70">
+            Anda dapat melihat informasi seperti nama kelas, tahun ajaran, semester, dan tingkat
+            untuk setiap kelas. Pastikan kelas sudah sesuai dengan kebutuhan dan tujuan
+            pembelajaran.
+          </p>
         </div>
-
-        <div className="grid w-full items-center gap-2">
-          <Label htmlFor="tahunAjaran">Tahun Ajaran</Label>
-          <Select
-            name="tahunAjaran"
-            value={data.tahunAjaran}
-            onValueChange={(value: string) => {
-              setData('tahunAjaran', value)
-              SETERROR((prev: any) => ({ ...prev, tahunAjaran: undefined }))
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih tahun ajaran" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {TahunAjaran.map((tahun) => {
-                  return (
-                    <SelectItem key={tahun} value={tahun} className="cursor-pointer">
-                      {tahun}
-                    </SelectItem>
-                  )
-                })}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          {ERROR?.tahunAjaran && <p className="text-xs text-red-600">* {ERROR?.tahunAjaran[0]}</p>}
-        </div>
-
-        <div className="grid w-full items-center gap-2">
-          <Label htmlFor="tingkat">Tingkat</Label>
-          <Select
-            name="tingkat"
-            value={data.tingkat.toString()}
-            onValueChange={(value: string) => {
-              setData('tingkat', parseInt(value))
-              SETERROR((prev: any) => ({ ...prev, tingkat: undefined }))
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih tingkat" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {[...Array(10)].map((_, index: number) => {
-                  const displayIndex = index + 1
-                  return (
-                    <SelectItem
-                      key={displayIndex}
-                      value={displayIndex.toString()}
-                      className="cursor-pointer"
-                    >
-                      {displayIndex}
-                    </SelectItem>
-                  )
-                })}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          {ERROR?.tingkat && <p className="text-xs text-red-600">* {ERROR?.tingkat[0]}</p>}
-        </div>
-
-        <div className="grid w-full items-center gap-2">
-          <Label htmlFor="semester">Semester</Label>
-          <Select
-            name="semester"
-            value={data.semester.toString()}
-            onValueChange={(value: string) => {
-              setData('semester', parseInt(value))
-              SETERROR((prev: any) => ({ ...prev, semester: undefined }))
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Pilih semester" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                {[...Array(2)].map((_, index: number) => {
-                  const displayIndex = index + 1
-                  return (
-                    <SelectItem
-                      key={displayIndex}
-                      value={displayIndex.toString()}
-                      className="cursor-pointer"
-                    >
-                      {displayIndex}
-                    </SelectItem>
-                  )
-                })}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-          {ERROR?.semester && <p className="text-xs text-red-600">* {ERROR?.semester[0]}</p>}
-        </div>
-        <Button
-          type="submit"
-          className={`max-w-max bg-blue-600 hover:bg-blue-700 ${processing && 'opacity-25'}`}
-          disabled={processing}
+        <form
+          onSubmit={submit}
+          className="mt-8 w-full md:w-2/3 lg:w-1/2 2xl:w-1/3 grid grid-cols-1 gap-6"
         >
-          Perbarui
-        </Button>
-      </form>
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="kode">Kode kelas</Label>
+            <Input
+              type="text"
+              id="kode"
+              placeholder="Masukkan nama kelas"
+              value={kelas.kode}
+              className="font-semibold bg-gray-300"
+              disabled
+            />
+          </div>
+
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="name">Nama Kelas</Label>
+            <Input
+              type="text"
+              id="name"
+              placeholder="Masukkan nama kelas"
+              value={data.name}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                const value = event.target.value.replace(/\s+/g, '')
+                setData('name', value)
+                SETERROR((prev: any) => ({ ...prev, name: undefined }))
+              }}
+            />
+          </div>
+
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="guru">Guru</Label>
+            <Popover
+              open={open.guru}
+              onOpenChange={() => setOpen((prev: OpenType) => ({ ...prev, guru: !prev.guru }))}
+            >
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open.guru}
+                  className="w-full justify-between"
+                >
+                  {data.guruId
+                    ? guru.find((item: GuruType) => item.id === data.guruId)?.fullName
+                    : 'Pilih guru...'}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-full p-0">
+                <Command>
+                  <CommandInput placeholder="Pilih guru..." />
+                  <CommandList>
+                    <CommandEmpty>Data guru tidak ditemukan.</CommandEmpty>
+                    <CommandGroup>
+                      {guru.map((item: any) => (
+                        <CommandItem
+                          key={item.id}
+                          className="pr-4"
+                          value={`${item.id.toString()}-${item.fullName.toString()}`}
+                          onSelect={(currentValue) => {
+                            const [id] = (currentValue.split('-') as [string, string]).map(
+                              (v, i) => (i === 0 && !v ? '0' : v)
+                            ) || ['0', '']
+                            const idNumber: number = parseInt(id)
+                            const value = data.guruId === idNumber ? null : idNumber
+                            setData('guruId', value)
+                            setOpen((prev) => ({ ...prev, guru: !prev.guru }))
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-0 h-4 w-4',
+                              data.guruId === item.id ? 'opacity-100' : 'opacity-0'
+                            )}
+                          />
+                          {item.fullName}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+
+            {ERROR?.guruId && <p className="text-xs text-red-600">* {ERROR?.guruId[0]}</p>}
+          </div>
+
+          <div className="grid w-full items-center gap-2">
+            <Label htmlFor="matapelajaran">Mata Pelajaran</Label>
+            <Input
+              type="text"
+              id="matapelajaran"
+              placeholder="Masukkan nama mata pelajaran"
+              value={kelas.mataPelajaran.name}
+              className="font-semibold bg-gray-300"
+              disabled
+            />
+          </div>
+
+          <Button
+            type="submit"
+            className={`max-w-max bg-blue-600 hover:bg-blue-700 ${processing && 'opacity-25'}`}
+            disabled={processing}
+          >
+            Perbarui
+          </Button>
+        </form>
+      </div>
     </AdminLayout>
   )
 }

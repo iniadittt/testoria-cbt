@@ -16,8 +16,6 @@ export default class extends BaseSeeder {
       siswaId: 1,
       tokenUjian: ujianAvailable[0].token || undefined,
       isSelesai: false,
-      isActive: true,
-      isDelete: false,
       createdBy: 1,
     })
   }

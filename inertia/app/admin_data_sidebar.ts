@@ -45,7 +45,7 @@ export const AdminDataSidebar = {
       items: [
         {
           title: 'List Soal',
-          url: '#',
+          url: 'admin.soal.page',
         },
       ],
     },

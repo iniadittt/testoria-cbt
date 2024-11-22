@@ -1,7 +1,7 @@
 'use client'
 
-import * as React from 'react'
-import { Link, usePage } from '@inertiajs/react'
+import React, { useState, useEffect } from 'react'
+import { Link, useForm, usePage } from '@inertiajs/react'
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -14,16 +14,25 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table'
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from 'lucide-react'
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  ChevronDown,
+  ListFilter,
+  MoreHorizontal,
+} from 'lucide-react'
 import { Button } from '@/shadcn/button'
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
 } from '@/shadcn/dropdown-menu'
 import { Input } from '@/shadcn/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shadcn/table'
@@ -38,30 +47,78 @@ import {
   DialogTrigger,
 } from '@/shadcn/dialog'
 import { KelasType } from '@/types/kelas'
+import { Checkbox } from '@/shadcn/checkbox'
+import { Months } from '@/constant/months'
+import { Label } from '@/shadcn/label'
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from '@/shadcn/context-menu'
 
-export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
-  const [rowSelection, setRowSelection] = React.useState({})
+type FilterType = 'kode' | 'name' | 'mataPelajaranName' | 'guruFullName'
+
+export function DataTableAdminKelas({ data, state }: { data: KelasType[]; state?: any }) {
   const routes = usePage().props.routes as RoutesType
 
+  const [sorting, setSorting] = useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = useState({})
+
+  useEffect(() => {
+    state.setIds(
+      'list',
+      Object.keys(rowSelection)
+        .map((row) => parseInt(row, 10))
+        .map((idx) => data[idx].id)
+    )
+  }, [rowSelection])
+
   const columns: ColumnDef<KelasType>[] = [
+    {
+      id: 'select',
+      header: ({ table }) => (
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+          className="ml-2"
+        />
+      ),
+      cell: ({ row }) => (
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+          className="ml-2"
+        />
+      ),
+      enableSorting: false,
+      enableHiding: false,
+    },
     {
       accessorKey: 'kode',
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
-            className="ml-4"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="hover:bg-transparent"
           >
             Kode Kelas
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+            {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
           </Button>
         )
       },
-      cell: ({ row }) => <div className="ml-4 capitalize">{row.getValue('kode')}</div>,
+      cell: ({ row }) => (
+        <div className="ml-4 capitalize whitespace-nowrap">{row.getValue('kode')}</div>
+      ),
     },
     {
       accessorKey: 'name',
@@ -70,62 +127,62 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="hover:bg-transparent"
           >
             Nama Kelas
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+            {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
           </Button>
         )
       },
-      cell: ({ row }) => <div className="capitalize">{row.getValue('name')}</div>,
+      cell: ({ row }) => (
+        <div className="ml-4 capitalize whitespace-nowrap">{row.getValue('name')}</div>
+      ),
     },
     {
-      accessorKey: 'mataPelajaran',
+      accessorKey: 'mataPelajaranName',
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="hover:bg-transparent"
           >
             Nama Mata Pelajaran
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+            {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
           </Button>
         )
       },
-      cell: ({ row }) => {
-        const mataPelajaran = row.getValue('mataPelajaran') as { id: number; name: string }
-        const mataPelajaranName = mataPelajaran.name
-        return <div className="capitalize">{mataPelajaranName}</div>
-      },
+      cell: ({ row }) => (
+        <div className="ml-4 capitalize whitespace-nowrap">{row.getValue('mataPelajaranName')}</div>
+      ),
     },
     {
-      accessorKey: 'guru',
+      accessorKey: 'guruFullName',
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="hover:bg-transparent"
           >
             Guru
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
+            {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
           </Button>
         )
       },
-      cell: ({ row }) => {
-        const guru = row.getValue('guru') as { id: number; fullName: string }
-        const guruName = guru.fullName
-        return <div className="capitalize">{guruName}</div>
-      },
+      cell: ({ row }) => (
+        <div className="ml-4 capitalize whitespace-nowrap">{row.getValue('guruFullName')}</div>
+      ),
     },
     {
       accessorKey: 'createdByUser',
-      header: ({ column }) => {
+      header: () => {
         return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Dibuat Oleh
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+          <Button variant="ghost" className="hover:bg-transparent">
+            Dibuat oleh
           </Button>
         )
       },
@@ -133,11 +190,11 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
         const createdBy = row.getValue('createdByUser') as { id: number; fullName: string }
         const fullName = createdBy.fullName
         const createdAt = new Date(row.original.createdAt)
-        const formattedCreatedAt = `${createdAt.getUTCFullYear()}-${String(createdAt.getUTCMonth() + 1).padStart(2, '0')}-${String(createdAt.getUTCDate()).padStart(2, '0')} ${String(createdAt.getUTCHours()).padStart(2, '0')}:${String(createdAt.getUTCMinutes()).padStart(2, '0')}:${String(createdAt.getUTCSeconds()).padStart(2, '0')}`
+        const formattedDateCreatedAt = `${String(createdAt.getUTCDate()).padStart(2)} ${Months[createdAt.getUTCMonth()]}, ${createdAt.getUTCFullYear()}`
         return (
-          <div>
-            <div className="capitalize text-sm">{fullName}</div>
-            <div className="text-sm">{formattedCreatedAt}</div>
+          <div className="ml-4">
+            <div className="capitalize text-13px whitespace-nowrap">{fullName}</div>
+            <div className="text-13px whitespace-nowrap">{formattedDateCreatedAt}</div>
           </div>
         )
       },
@@ -150,49 +207,66 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+              <Button variant="ghost" className="h-4 w-4 p-0 hover:bg-transparent">
+                <span className="sr-only">Aksi</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end" className="p-0 py-1.5 rounded-none">
               <DropdownMenuItem
-                className="w-full text-sm py-1.5 text-left px-2 cursor-pointer hover:bg-gray-100 rounded hover:duration-75 duration-75"
+                className="w-full text-left py-1.5 px-3 m-0 cursor-pointer rounded-none hover:bg-gray-100 hover:duration-75 duration-75"
                 asChild
               >
-                <Link href={`${routes.as['admin.kelas.detail']}?id=${data.id}`}>Ubah</Link>
+                <Link className="text-sm" href={`${routes.as['admin.kelas.detail']}?id=${data.id}`}>
+                  Ubah
+                </Link>
               </DropdownMenuItem>
-              {/* <DropdownMenuItem className="cursor-pointer">Hapus</DropdownMenuItem> */}
-
               <Dialog>
-                <DialogTrigger className="mt-1 w-full text-sm py-1.5 text-left px-2 cursor-pointer hover:bg-gray-100 rounded hover:duration-75 duration-75">
+                <DialogTrigger className="w-full text-sm py-1.5 text-left px-3 m-0 cursor-pointer rounded-none hover:bg-gray-100 hover:duration-75 duration-75">
                   Hapus
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Yakin ingin menghapus data Mata Pelajaran?</DialogTitle>
-                    <DialogDescription>
-                      <p>Menghapus mata pelajaran dengan data sebagai berikut</p>
-                      {/* <div className="mt-2">
+                    <DialogTitle className="text-xl">Yakin ingin menghapus data Kelas?</DialogTitle>
+                    <div className="text-sm font-normal">
+                      <div className="flex flex-col gap-4">
+                        <p>Menghapus kelas dengan data sebagai berikut:</p>
+                        <div>
+                          <p>
+                            Kode kelas: <span className="font-semibold">{data.kode}</span>
+                          </p>
+                          <p>
+                            Nama kelas: <span className="font-semibold">{data.name}</span>
+                          </p>
+                          <p>
+                            Nama mata pelajaran:{' '}
+                            <span className="font-semibold">{data.mataPelajaran.name}</span>
+                          </p>
+                          <p>
+                            Guru: <span className="font-semibold">{data.guru.fullName}</span>
+                          </p>
+                        </div>
                         <p>
-                          Nama Mata Pelajaran: <span className="font-semibold">{data.name}</span>
+                          Pastikan data yang ingin dihapus sudah benar.{' '}
+                          <span className="font-semibold text-red-600">
+                            Data yang dihapus tidak dapat dikembalikan dan dapat menyebabkan
+                            hilangnya informasi penting.
+                          </span>
                         </p>
-                        <p>
-                          Tahun Ajaran: <span className="font-semibold">{data.tahunAjaran}</span>
-                        </p>
-                        <p>
-                          Tingkat: <span className="font-semibold">{data.tingkat}</span>
-                        </p>
-                        <p>
-                          Semester: <span className="font-semibold">{data.semester}</span>
-                        </p>
-                      </div> */}
-                      <Button variant="destructive" className="mt-4">
-                        Hapus Mata Pelajaran
-                      </Button>
-                    </DialogDescription>
+                      </div>
+                      <div className="flex justify-end mt-4">
+                        <Button
+                          variant="outline"
+                          size="default"
+                          onClick={(event: React.MouseEvent<HTMLButtonElement>) =>
+                            handlerDelete(event, data.id)
+                          }
+                          className="border-none shadow-none text-red-600 duration-75 hover:bg-gray-100 hover:text-red-600 hover:duration-75"
+                        >
+                          Hapus
+                        </Button>
+                      </div>
+                    </div>
                   </DialogHeader>
                 </DialogContent>
               </Dialog>
@@ -202,6 +276,23 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
       },
     },
   ]
+
+  const [filter, setFilter] = useState<FilterType | ''>('')
+  const [textFilter, setTextFilter] = useState<string>('')
+
+  useEffect(() => {
+    setTextFilter('')
+    listFilterArgs.forEach((fltr: FilterType) => table.getColumn(fltr)?.setFilterValue(undefined))
+  }, [filter])
+
+  useEffect(() => table.getColumn(filter)?.setFilterValue(textFilter || undefined), [textFilter])
+
+  const { delete: destroy } = useForm()
+
+  const handlerDelete = async (event: React.MouseEvent<HTMLButtonElement>, id: number) => {
+    event.preventDefault()
+    destroy(`${routes.as['admin.kelas.destroy']}?id=${id}`)
+  }
 
   const table = useReactTable({
     data,
@@ -222,41 +313,113 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
     },
   })
 
+  const listFilterArgs: FilterType[] = ['kode', 'name', 'mataPelajaranName', 'guruFullName']
+
+  const filterPlaceholders: any = {
+    kode: 'Cari mata pelajaran berdasarkan kode kelas...',
+    name: 'Cari mata pelajaran berdasarkan nama kelas...',
+    mataPelajaranName: 'Cari mata pelajaran berdasarkan nama mata pelajaran...',
+    guruFullName: 'Cari mata pelajaran berdasarkan nama guru...',
+  }
+
   return (
-    <div className="w-full">
-      <div className="flex flex-col lg:flex-row gap-2 py-4">
-        <Input
-          placeholder="Cari kelas berdasarkan nama..."
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
-          className="w-full lg:max-w-sm"
-        />
+    <div className="grid grid-cols-1">
+      <div className="flex mt-6 w-full">
+        <div className="w-full flex">
+          <DropdownMenu>
+            <div className="flex justify-start gap-2">
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="max-w-fit rounded-none shadow-none border-0 border-t border-gray-200 flex justify-between"
+                >
+                  <ListFilter size={18} />
+                  <span className="ml-2 my-auto">
+                    {(() => {
+                      const getFilterText = (filter: FilterType | string): string =>
+                        ({
+                          kode: 'Kode kelas',
+                          name: 'Nama kelas',
+                          mataPelajaranName: 'Nama mata pelajaran',
+                          guruFullName: 'Nama guru',
+                        })[filter] || 'Filter'
+                      return getFilterText(filter)
+                    })()}
+                  </span>{' '}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                sideOffset={1}
+                className="w-[200px] p-0 py-2 rounded-none -my-[1px] relative z-10"
+              >
+                <DropdownMenuRadioGroup
+                  value={filter}
+                  onValueChange={(value: any) => setFilter(value)}
+                >
+                  {listFilterArgs.map((option: string) => {
+                    const columnNames: Record<string, string> = {
+                      kode: 'Kode kelas',
+                      name: 'Nama kelas',
+                      mataPelajaranName: 'Nama mata pelajaran',
+                      guruFullName: 'Nama guru',
+                    }
+                    const text: string = columnNames[option] || option
+                    return (
+                      <DropdownMenuRadioItem
+                        key={option}
+                        value={option}
+                        className="cursor-pointer rounded-none pr-5"
+                      >
+                        {text}
+                      </DropdownMenuRadioItem>
+                    )
+                  })}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </div>
+          </DropdownMenu>
+          {filter ? (
+            <Input
+              placeholder={filterPlaceholders[filter]}
+              value={(table.getColumn(filter)?.getFilterValue() as string) || ''}
+              onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                setTextFilter(event.target.value)
+              }
+              className="w-full rounded-none shadow-none border-0 border-t placeholder:text-gray-400 placeholder:text-13px relative z-10"
+            />
+          ) : (
+            <div className="w-full rounded-none shadow-none border-0 border-t" />
+          )}
+        </div>
         <DropdownMenu>
-          <div className="w-full flex justify-end gap-2">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Link href={routes.as['admin.kelas.create']}>Tambah Kelas</Link>
-            </Button>
+          <div className="flex justify-end gap-2">
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="">
+              <Button
+                variant="outline"
+                className="rounded-none shadow-none border-0 border-t border-gray-200"
+              >
                 Kolom <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="p-0 py-2 rounded-none -my-1">
               {table
                 .getAllColumns()
                 .filter((column) => column.getCanHide())
                 .map((column) => {
                   const columnNames: Record<string, string> = {
-                    kode: 'Kode Kelas',
-                    name: 'Nama Kelas',
-                    mataPelajaran: 'Nama Mata Pelajaran',
-                    createdByUser: 'Dibuat Oleh',
+                    kode: 'Kode kelas',
+                    name: 'Nama kelas',
+                    mataPelajaranName: 'Nama mata pelajaran',
+                    guruFullName: 'Nama guru',
+                    createdByUser: 'Dibuat oleh',
                   }
                   const text = columnNames[column.id] || column.id
                   return (
                     <DropdownMenuCheckboxItem
                       key={text}
-                      className="capitalize cursor-pointer"
+                      className="cursor-pointer rounded-none pr-5"
                       checked={column.getIsVisible()}
                       onCheckedChange={(value) => column.toggleVisibility(!!value)}
                     >
@@ -268,20 +431,20 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
           </div>
         </DropdownMenu>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+      <div className="border-y overflow-x-auto">
+        <Table className="p-0">
+          <TableHeader className="bg-gray-100/90">
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  )
-                })}
+              <TableRow key={headerGroup.id} className="relative">
+                {headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className={header.id === 'actions' ? 'text-center' : ''}
+                  >
+                    {!header.isPlaceholder &&
+                      flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
@@ -289,27 +452,33 @@ export function DataTableAdminKelas({ data }: { data: KelasType[] }) {
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    const title = cell.id.split('_')[1]
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        className={`px-2 py-1 align-top ${title === 'actions' ? 'text-center' : 'text-left'}`}
+                      >
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className="h-24 text-center">
-                  Tidak ada mata pelajaran.
+                  Tidak ada data kelas.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          Total {table.getFilteredRowModel().rows.length} data mata pelajaran.
-        </div>
+      <div className="w-full flex items-center justify-end space-x-2 py-4">
+        <p className="flex-1 text-muted-foreground text-13px">
+          Total {table.getFilteredRowModel().rows.length} data kelas.
+        </p>
         <div className="space-x-2">
           <Button
             variant="outline"

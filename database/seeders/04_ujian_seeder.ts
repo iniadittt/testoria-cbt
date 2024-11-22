@@ -39,8 +39,6 @@ export default class extends BaseSeeder {
         picAdmin: jumlahUjian % 2 === 0 ? 1 : 2,
         // picAdmin: Math.floor(Math.random() * 5) + 1,
         overtime: jumlahUjian % 2 === 0 ? true : false,
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }

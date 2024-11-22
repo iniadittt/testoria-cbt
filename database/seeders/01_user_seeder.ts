@@ -15,8 +15,6 @@ export default class extends BaseSeeder {
       phone: '083897916745',
       role: 'admin',
       gender: 'male',
-      isActive: true,
-      isDelete: false,
     })
 
     for (let i = 0; i < jumlahOperator; i++) {
@@ -28,8 +26,6 @@ export default class extends BaseSeeder {
         phone: `0811111111${i + 1}`,
         role: 'operator',
         gender: 'male',
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }
@@ -43,8 +39,6 @@ export default class extends BaseSeeder {
         phone: `0822222222${i + 1}`,
         role: 'guru',
         gender: 'male',
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }
@@ -58,8 +52,6 @@ export default class extends BaseSeeder {
         phone: `0833333333${i + 1}`,
         role: 'siswa',
         gender: 'male',
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }

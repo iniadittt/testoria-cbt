@@ -5,11 +5,7 @@ import Jawaban from '#models/jawaban'
 export default class extends BaseSeeder {
   async run() {
     const totalJawaban = 5
-    const bankSoal = await BankSoal.query().where((builder) => {
-      builder.andWhere('isActive', true)
-      builder.andWhere('isDelete', false)
-    })
-
+    const bankSoal = await BankSoal.all()
     for (const soal of bankSoal) {
       const jawabanData = []
       const total = soal.type === 'essai' ? 1 : totalJawaban
@@ -27,8 +23,6 @@ export default class extends BaseSeeder {
               : soal.type === 'multiple' || soal.type === 'pg'
                 ? j % 2 === 0
                 : j === 0,
-          isActive: true,
-          isDelete: false,
           createdBy: 1,
         })
       }

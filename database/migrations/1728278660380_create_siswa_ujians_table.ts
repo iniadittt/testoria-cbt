@@ -10,18 +10,11 @@ export default class extends BaseSchema {
       table.string('token_ujian', 16).notNullable()
       table.float('nilai_akhir').nullable()
       table.dateTime('mulai').nullable()
-
       table.boolean('is_selesai').defaultTo(false).notNullable()
-      table.boolean('is_active').defaultTo(false).notNullable()
-      table.boolean('is_delete').defaultTo(false).notNullable()
-
       table.integer('created_by').unsigned().nullable()
       table.integer('updated_by').unsigned().nullable()
-      table.integer('deleted_by').unsigned().nullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now()).notNullable()
       table.timestamp('updated_at', { useTz: true }).nullable()
-      table.timestamp('deleted_at', { useTz: true }).nullable()
-
       table
         .foreign('siswa_id')
         .references('id')
@@ -42,12 +35,6 @@ export default class extends BaseSchema {
         .onUpdate('CASCADE')
       table
         .foreign('updated_by')
-        .references('id')
-        .inTable('users')
-        .onDelete('SET NULL')
-        .onUpdate('CASCADE')
-      table
-        .foreign('deleted_by')
         .references('id')
         .inTable('users')
         .onDelete('SET NULL')

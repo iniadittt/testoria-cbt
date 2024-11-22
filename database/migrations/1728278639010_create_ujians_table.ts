@@ -18,21 +18,13 @@ export default class extends BaseSchema {
       table.dateTime('selesai').notNullable()
       table.boolean('overtime').notNullable().defaultTo(false)
       table.boolean('show_nilai').notNullable().defaultTo(false)
-
       table.integer('kelas_id').unsigned().notNullable()
       table.integer('pengawas').unsigned().notNullable()
       table.integer('pic_admin').unsigned().notNullable()
-
-      table.boolean('is_active').defaultTo(false).notNullable()
-      table.boolean('is_delete').defaultTo(false).notNullable()
-
       table.integer('created_by').unsigned().nullable()
       table.integer('updated_by').unsigned().nullable()
-      table.integer('deleted_by').unsigned().nullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now()).notNullable()
       table.timestamp('updated_at', { useTz: true }).nullable()
-      table.timestamp('deleted_at', { useTz: true }).nullable()
-
       table
         .foreign('kelas_id')
         .references('id')
@@ -59,12 +51,6 @@ export default class extends BaseSchema {
         .onUpdate('CASCADE')
       table
         .foreign('updated_by')
-        .references('id')
-        .inTable('users')
-        .onDelete('SET NULL')
-        .onUpdate('CASCADE')
-      table
-        .foreign('deleted_by')
         .references('id')
         .inTable('users')
         .onDelete('SET NULL')

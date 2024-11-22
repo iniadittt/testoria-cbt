@@ -12,8 +12,6 @@ export default class extends BaseSeeder {
         await BankSoalUjian.create({
           bankSoalId: soal.id,
           ujianId,
-          isActive: true,
-          isDelete: false,
           createdBy: 1,
         })
       }

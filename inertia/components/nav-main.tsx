@@ -43,20 +43,22 @@ export function NavMain({
     )
   }
   return (
-    <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
-      <SidebarMenu>
+    <SidebarGroup className="p-0">
+      <SidebarGroupLabel className="text-13px font-medium text-black/40 p-4">
+        Platform
+      </SidebarGroupLabel>
+      <SidebarMenu className="gap-0">
         {items.map((item) => (
           <Collapsible
             key={item.title}
             open={openItem.includes(item.title)}
             onOpenChange={() => handleCollapsible(item.title)}
           >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
+            <SidebarMenuItem className="w-full">
+              <CollapsibleTrigger asChild className="rounded-none px-4 mx-auto">
                 <SidebarMenuButton tooltip={item.title}>
-                  {item.icon && <item.icon />}
-                  <span>{item.title}</span>
+                  {item.icon && <item.icon className="" />}
+                  <span className="ml-2 text-13px leading-40">{item.title}</span>
                   <motion.span
                     animate={{ rotate: openItem.includes(item.title) ? 90 : 0 }}
                     transition={{ type: 'spring', bounce: 0, duration: 0.2 }}
@@ -74,14 +76,14 @@ export function NavMain({
                       animate={{ height: 'auto' }}
                       exit={{ height: 0 }}
                       transition={{ type: 'spring', bounce: 0, duration: 0.3 }}
-                      className="overflow-hidden"
+                      className="overflow-hidden w-full pl-6"
                     >
-                      <SidebarMenuSub>
+                      <SidebarMenuSub className="p-0 m-0">
                         {item.items?.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton asChild>
-                              <Link href={routes.as[subItem.url]}>
-                                <span>{subItem.title}</span>
+                              <Link href={routes.as[subItem.url]} className="rounded-none ml-1">
+                                <span className="text-13px">{subItem.title}</span>
                               </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>

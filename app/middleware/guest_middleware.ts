@@ -37,7 +37,6 @@ export default class GuestMiddleware {
         return ctx.response.redirect(this.redirectTo, true)
       }
     }
-
     return next()
   }
 }

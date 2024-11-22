@@ -21,8 +21,6 @@ export default class extends BaseSeeder {
         assetsId: Math.random() < 0.5 ? 1 : null,
         bobot,
         mataPelajaranId: jumlahBankSoal % 2 === 0 ? 1 : 2,
-        isActive: true,
-        isDelete: false,
         createdBy: 1,
       })
     }

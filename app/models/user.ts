@@ -44,20 +44,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column()
   declare photo: number | null
 
-  @column({ columnName: 'is_active' })
-  declare isActive: boolean
-
-  @column({ columnName: 'is_delete' })
-  declare isDelete: boolean
-
   @column({ columnName: 'created_by' })
   declare createdBy: number | null
 
   @column({ columnName: 'updated_by' })
   declare updatedBy: number | null
-
-  @column({ columnName: 'deleted_by' })
-  declare deletedBy: number | null
 
   @column.dateTime({ autoCreate: true, columnName: 'created_at' })
   declare createdAt: DateTime
@@ -65,55 +56,13 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @column.dateTime({ autoCreate: true, autoUpdate: true, columnName: 'updated_at' })
   declare updatedAt: DateTime | null
 
-  @column.dateTime({ columnName: 'deleted_at' })
-  declare deletedAt: DateTime | null
+  @belongsTo(() => User, {
+    foreignKey: 'createdByUser',
+  })
+  declare createdByUser: BelongsTo<typeof User>
 
   @belongsTo(() => User, {
-    foreignKey: 'createdBy',
+    foreignKey: 'updatedByUser',
   })
-  declare creator: BelongsTo<typeof User>
-
-  public async activate() {
-    this.isActive = true
-    await this.save()
-  }
-
-  public async deactivate() {
-    this.isActive = false
-    await this.save()
-  }
-
-  public async softDelete(deletedBy: number) {
-    this.isDelete = true
-    this.deletedBy = deletedBy
-    this.deletedAt = DateTime.now()
-    await this.save()
-  }
-
-  public async restore() {
-    this.isDelete = false
-    this.deletedBy = null
-    this.deletedAt = null
-    await this.save()
-  }
-
-  public getFormattedFullName(): string {
-    return this.fullName ? this.fullName : `${this.username}`
-  }
-
-  public isAdmin(): boolean {
-    return this.role === 'admin'
-  }
-
-  public isOperator(): boolean {
-    return this.role === 'operator'
-  }
-
-  public isGuru(): boolean {
-    return this.role === 'guru'
-  }
-
-  public isSiswa(): boolean {
-    return this.role === 'siswa'
-  }
+  declare updatedByUser: BelongsTo<typeof User>
 }

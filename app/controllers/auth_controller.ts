@@ -1,9 +1,11 @@
 import type { HttpContext } from '@adonisjs/core/http'
-import { RedirectTo, FlashAndRedirect } from '#services/general_service'
+import app from '@adonisjs/core/services/app'
+import { FlashAndRedirect } from '#services/general_service'
 import { LoginValidator } from '#validators/login'
 import { RedirectMap } from '#constant/location_page'
 import { RoleType } from '#types/role'
 import User from '#models/user'
+import { cuid } from '@adonisjs/core/helpers'
 
 export default class AuthController {
   async login(ctx: HttpContext) {
@@ -17,15 +19,10 @@ export default class AuthController {
       if (!user || !(await User.verifyCredentials(payload.username, payload.password))) {
         return FlashAndRedirect(ctx, 'error', 'Username atau password salah')
       }
-
-      const isUserInvalid: boolean = !user.isActive || user.isDelete
-      if (isUserInvalid) {
-        return FlashAndRedirect(ctx, 'error', 'Username atau password salah')
-      }
       await ctx.auth.use('web').login(user)
       const role: RoleType = user.role
       const to: string = RedirectMap[role] || 'cbt.page'
-      return FlashAndRedirect(ctx, 'success', 'Login berhasil', to)
+      return FlashAndRedirect(ctx, 'success', 'Berhasil Masuk', to)
     } catch (error) {
       return FlashAndRedirect(ctx, 'error', error.message)
     }
@@ -33,6 +30,22 @@ export default class AuthController {
 
   async logout(ctx: HttpContext) {
     await ctx.auth.use('web').logout()
-    return RedirectTo(ctx, 'auth.login.page')
+    return FlashAndRedirect(ctx, 'success', 'Berhasil Keluar', 'auth.login.page')
+  }
+
+  async upload(ctx: HttpContext) {
+    const file = ctx.request.file('file', {
+      size: '10mb',
+      extnames: ['jpg', 'png', 'jpeg'],
+    })
+    if (!file?.isValid) {
+      return ctx.response.json({
+        code: 400,
+        message: 'Bad request',
+      })
+    }
+    await file.move(app.makePath('storage/uploads'), {
+      name: `${cuid()}.${file.extname}`,
+    })
   }
 }
