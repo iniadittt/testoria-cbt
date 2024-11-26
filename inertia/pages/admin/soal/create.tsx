@@ -28,6 +28,7 @@ import {
 import { Textarea } from '@/shadcn/textarea'
 import Jawaban from '#models/jawaban'
 import axios from 'axios'
+import { asyncFunction } from '@/lib/async_function'
 
 // =================================================================
 // Interface
@@ -39,10 +40,10 @@ interface OpenType {
 }
 
 interface ErrorType {
+  type: string[] | undefined
   pertanyaan: string[] | undefined
   bobot: string[] | undefined
   mataPelajaranId: string[] | undefined
-  file: string[] | undefined
   jawaban: string | string[] | undefined
 }
 
@@ -51,14 +52,19 @@ interface DataType {
   type: 'pg' | 'multiple' | 'essai' | null
   bobot: number | null
   mataPelajaranId: number | null
-  file: any | null
+  assetId: number | null
   jawaban: JawabanType[]
 }
 
 interface JawabanType {
   jawaban: string
   isKunci: boolean
-  file: any | null
+  assetId: number | null
+}
+
+interface FileType {
+  key: string | null
+  url: string
 }
 
 // =================================================================
@@ -79,7 +85,6 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
     type: false,
     mataPelajaran: false,
   })
-
   const [value, setValue] = useState<{
     type: string | null
     mataPelajaran: number | null
@@ -88,58 +93,76 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
     mataPelajaran: null,
   })
   const [ERROR, SETERROR] = useState<ErrorType | undefined>()
-
-  const [selectedFile, setSelectedFile] = useState<{ name: string; image: any | null }>({
-    name: '',
-    image: null,
-  })
-
-  const [IMAGE, SETIMAGE] = useState<any>()
+  const [files, setFiles] = useState<FileType[]>([])
+  const [kunciJawabanValid, setKunciJawabanValid] = useState<boolean>(false)
 
   const { data, setData, processing, reset, post } = useForm<DataType>({
     pertanyaan: '',
     type: null,
     bobot: null,
     mataPelajaranId: null,
-    file: null,
-    jawaban: [{ jawaban: '', isKunci: false, file: null }],
+    assetId: null,
+    jawaban: [],
   })
 
   useEffect(() => SETERROR(errors), [errors])
   useEffect(() => setData('type', value.type as DataType['type']), [value.type])
   useEffect(() => setData('mataPelajaranId', value.mataPelajaran), [value.mataPelajaran])
-  useEffect(() => setData('file', selectedFile.image), [selectedFile.image])
-  useEffect(() => setData('jawaban', [{ jawaban: '', isKunci: false, file: null }]), [data.type])
+  useEffect(
+    () =>
+      setData('jawaban', [
+        { jawaban: '', isKunci: false, assetId: null },
+        { jawaban: '', isKunci: false, assetId: null },
+      ]),
+    [data.type]
+  )
+  useEffect(() => {
+    const isKunciValid =
+      data.type !== 'essai'
+        ? data.jawaban.filter((jwb) => jwb.isKunci).length > 0
+        : data.jawaban.length > 0
+    setKunciJawabanValid(isKunciValid)
+  }, [data.jawaban, data.type])
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    console.log({ data })
-    // post(routes.as['admin.soal.store'])
-
-    axios.post(routes.as['upload'], IMAGE).then((res) => {
-      console.log('Axios response: ', res)
+    post(routes.as['admin.soal.store'], {
+      onFinish: () => console.log('FINISH'),
     })
   }
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, key: string) => {
-    const jawabanId: number = parseInt(key.split('jawaban')[1], 10)
-    if (event.target.files && event.target.files[0]) {
-      let reader = new FileReader()
-      reader.readAsDataURL(event.target.files[0])
-      if (key === 'pertanyaan') {
-        setData('file', reader)
-        const formData = new FormData()
-        formData.append('file', event.target.files[0], event.target.files[0].name)
-        SETIMAGE(formData)
-      }
-      if (key.startsWith('jawaban') && jawabanId) {
-        setData((prev: DataType) => ({
-          ...prev,
-          jawaban: prev.jawaban.map((jawaban, index) =>
-            index === jawabanId ? { ...jawaban, file: reader } : jawaban
-          ),
-        }))
-      }
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>, key: string) => {
+    const files = event.target.files
+    if (!files || files.length === 0) return
+    const formData = new FormData()
+    formData.append('file', files[0], files[0].name)
+    const [dataUpload, errorUpload] = await asyncFunction(
+      async () =>
+        await axios.post(routes.as['upload'], formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+    )
+    if (errorUpload) {
+      console.error(errorUpload)
+      return
+    }
+    setFiles((prev: FileType[]) => [...prev, { key, url: dataUpload.data.data.url }])
+    if (key === 'pertanyaan') {
+      setData('assetId', dataUpload.data.data.assetId)
+    }
+    if (key.startsWith('jawaban')) {
+      setData(
+        'jawaban',
+        data.jawaban.map((jawab, index) => {
+          if (parseInt(key.split('jawaban')[1], 10) === index) {
+            return { ...jawab, assetId: dataUpload.data.data.assetId }
+          } else {
+            return jawab
+          }
+        })
+      )
     }
   }
 
@@ -215,6 +238,7 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                 </Command>
               </PopoverContent>
             </Popover>
+            {ERROR?.type && <p className="text-xs text-red-600">* {ERROR?.type[0]}</p>}
           </div>
 
           <div className="grid w-full items-center gap-2">
@@ -298,11 +322,14 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                 </Command>
               </PopoverContent>
             </Popover>
+            {ERROR?.mataPelajaranId && (
+              <p className="text-xs text-red-600">* {ERROR?.mataPelajaranId[0]}</p>
+            )}
           </div>
 
           <div className="grid w-full items-center gap-2">
             <Label>File Pertanyaan</Label>
-            <div>
+            <div className="relative">
               <label
                 htmlFor="picture"
                 className="flex items-center gap-2 border shadow-sm rounded cursor-pointer"
@@ -310,20 +337,33 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                 <span className="cursor-pointer rounded-l px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 duration-150 hover:duration-150">
                   Pilih File
                 </span>
-                <span className="text-sm text-gray-500 ml-1">
-                  {selectedFile.name || 'Belum ada file yang dipilih'}
+                <span className="text-sm text-gray-500 ml-1 overflow-x-hidden">
+                  {files
+                    .filter((file: FileType) => file.key === 'pertanyaan')[0]
+                    ?.url.split('assets/uploads/')[1] || 'Belum ada file yang dipilih'}
                 </span>
               </label>
+
+              {files.find((file: FileType) => file.key === 'pertanyaan')?.url && (
+                <a
+                  href={`/${files.find((file: FileType) => file.key === 'pertanyaan')?.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute z-10 top-0 right-0 px-3 bg-gray-200 h-full flex items-center rounded-r hover:bg-gray-300 cursor-pointer duration-75 hover:duration-75"
+                >
+                  Lihat
+                </a>
+              )}
             </div>
             <input
               id="picture"
               type="file"
               className="hidden"
+              accept=".png, .jpg, .jpeg"
               onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
                 handleFileChange(event, 'pertanyaan')
               }
             />
-            {ERROR?.file && <p className="text-xs text-red-600">* {ERROR?.file[0]}</p>}
           </div>
 
           <div className="grid w-full items-center gap-2 xl:col-span-2">
@@ -347,7 +387,7 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                   onClick={() =>
                     setData('jawaban', [
                       ...data.jawaban,
-                      { jawaban: '', isKunci: false, file: null },
+                      { jawaban: '', isKunci: false, assetId: null },
                     ])
                   }
                 >
@@ -374,13 +414,12 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                       id={`jawaban${index}`}
                       placeholder={`Masukkan jawaban ${index + 1}...`}
                       className="resize-none h-36"
-                      onChange={(event: any) => {
+                      onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
                         setData(
                           'jawaban',
-                          data.jawaban.map((jwbn: JawabanType, idx: number) => ({
-                            ...jwbn,
-                            jawaban: idx === index ? event.target.value : jwban.jawaban,
-                          }))
+                          data.jawaban.map((jwbn, idx) =>
+                            idx === index ? { ...jwbn, jawaban: event.target.value } : jwbn
+                          )
                         )
                       }}
                     />
@@ -389,21 +428,33 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                     )}
                   </div>
 
-                  <div className="grid content-start gap-4">
+                  <div className="grid w-full content-start gap-4">
                     <div className="w-full flex flex-col gap-2">
                       <Label>File Jawaban {index + 1}</Label>
-                      <div>
+                      <div className="relative overflow-hidden">
                         <label
                           htmlFor={`fileJawaban${index}`}
                           className="flex items-center gap-2 border shadow-sm rounded cursor-pointer"
                         >
-                          <span className="cursor-pointer rounded-l px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 duration-150 hover:duration-150">
+                          <span className="whitespace-nowrap cursor-pointer rounded-l px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 duration-150 hover:duration-150">
                             Pilih File
                           </span>
-                          <span className="text-sm text-gray-500 ml-1">
-                            {selectedFile.name || 'Belum ada file yang dipilih'}
+                          <span className="text-sm text-gray-500 ml-1 truncate">
+                            {files
+                              .filter((file: FileType) => file.key === `jawaban${index}`)[0]
+                              ?.url.split('assets/uploads/')[1] || 'Belum ada file yang dipilih'}
                           </span>
                         </label>
+                        {files.find((file: FileType) => file.key === `jawaban${index}`)?.url && (
+                          <a
+                            href={`/${files.find((file: FileType) => file.key === `jawaban${index}`)?.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="absolute z-10 top-0 right-0 px-3 bg-gray-200 h-full flex items-center rounded-r hover:bg-gray-300 cursor-pointer duration-75 hover:duration-75"
+                          >
+                            Lihat
+                          </a>
+                        )}
                       </div>
                       <input
                         id={`fileJawaban${index}`}
@@ -413,10 +464,9 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                           handleFileChange(event, `jawaban${index}`)
                         }
                       />
-                      {ERROR?.file && <p className="text-xs text-red-600">* {ERROR?.file[0]}</p>}
                     </div>
                     <div className="w-full flex flex-col gap-2">
-                      <Label>Kunci Jawaban</Label>
+                      <Label>Kunci Jawaban {index + 1}</Label>
                       <Select
                         value={jwban.isKunci ? 'yes' : 'no'}
                         onValueChange={(value) => {
@@ -465,12 +515,21 @@ export default function DashboardAdminCreateSoal({ mataPelajaran }: { mataPelaja
                 placeholder="Masukkan jawaban essai..."
                 className="resize-none h-36"
                 onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  setData('jawaban', [{ jawaban: event.target.value, isKunci: true, file: null }])
+                  setData('jawaban', [
+                    { jawaban: event.target.value, isKunci: true, assetId: null },
+                  ])
                 }
               />
               {ERROR?.jawaban && <p className="text-xs text-red-600">* {ERROR?.jawaban[0]}</p>}
             </div>
           )}
+
+          {!data.type ||
+            (!kunciJawabanValid && (
+              <p className="text-xs text-red-600 xl:col-span-2">
+                * Tidak ada kunci jawaban yang tepat!
+              </p>
+            ))}
 
           <Button
             type="submit"

@@ -114,37 +114,6 @@ export function DataTableAdminListSoal({ data, state }: { data: SoalType[]; stat
       },
     },
     {
-      accessorKey: 'asset',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-            className="hover:bg-transparent max-w-max flex justify-start"
-          >
-            Asset
-            {column.getIsSorted() === 'asc' && <ArrowUp className="h-4 w-4" />}
-            {column.getIsSorted() === 'desc' && <ArrowDown className="h-4 w-4" />}
-          </Button>
-        )
-      },
-      cell: ({ row }) => {
-        const asset: string = row.getValue('asset')
-        return (
-          <div className="ml-4 max-w-max">
-            {asset || (
-              <Badge
-                variant="outline"
-                className="text-13px max-w-full rounded-full whitespace-nowrap font-semibold border-none shadow-none bg-red-300 text-red-700"
-              >
-                Tidak ada asset
-              </Badge>
-            )}
-          </div>
-        )
-      },
-    },
-    {
       accessorKey: 'type',
       header: ({ column }) => {
         return (

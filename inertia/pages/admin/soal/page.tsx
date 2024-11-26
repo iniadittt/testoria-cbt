@@ -51,8 +51,11 @@ export default function DashboardAdminListSoal({ soal }: { soal: SoalType[] }) {
 
   const destroyData = async (event: React.MouseEvent) => {
     event.preventDefault()
-    destroy(routes.as['admin.kelas.list.destroy'], {
-      onFinish: () => reset(),
+    destroy(routes.as['admin.soal.list.destroy'], {
+      onFinish: () => {
+        setDialogOpen(false)
+        reset()
+      },
     })
   }
 

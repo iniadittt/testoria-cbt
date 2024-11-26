@@ -11,9 +11,11 @@ import { UpdateMataPelajaranValidator } from '#validators/matapelajaran_update'
 import { StoreKelasValidator } from '#validators/kelas_store'
 import { UpdateKelasValidator } from '#validators/kelas_update'
 import { DestroyListMataPelajaranValidator } from '#validators/matapelajaran_list_destroy'
-// import BankSoal from '#models/bank_soal'
-import Jawaban from '#models/jawaban'
 import { SoalAfterFilteredType } from '#types/soal'
+import { StoreSoalValidator } from '#validators/soal_store'
+import BankSoal from '#models/bank_soal'
+import Jawaban from '#models/jawaban'
+import { DestroyListSoalValidator } from '#validators/soal_list_destroy'
 
 export default class AdminController {
   async index(ctx: HttpContext) {
@@ -428,5 +430,62 @@ export default class AdminController {
       value: `${pelajaran.name} - ${pelajaran.tahunAjaran} - Tingkat ${pelajaran.tingkat} || ${pelajaran.id}`,
     }))
     return ctx.inertia.render('admin/soal/create', { mataPelajaran: mataPelajaranMap })
+  }
+
+  async soal_store(ctx: HttpContext) {
+    const myId: number = ctx!.auth!.user!.id
+    const payload = await ctx.request.validateUsing(StoreSoalValidator)
+    try {
+      const soalCreate = await BankSoal.create({
+        type: payload.type,
+        pertanyaan: payload.pertanyaan,
+        assetsId: payload.assetId,
+        bobot: payload.bobot,
+        mataPelajaranId: payload.mataPelajaranId,
+        createdBy: myId,
+      })
+      payload.jawaban.forEach(async (jawaban) => {
+        await Jawaban.create({
+          soalId: soalCreate.id,
+          jawaban: jawaban.jawaban,
+          assetsId: jawaban.assetId,
+          isKunci: jawaban.isKunci,
+          createdBy: myId,
+        })
+      })
+      return FlashAndRedirect(ctx, 'success', 'Berhasil membuat soal', 'admin.soal.page')
+    } catch (error) {
+      return FlashAndRedirect(
+        ctx,
+        'error',
+        error.message || 'Terjadi kesalahan saat membuat soal',
+        'admin.soal.page'
+      )
+    }
+  }
+
+  async soal_list_destroy(ctx: HttpContext) {
+    const trx = await db.transaction()
+    try {
+      const payload = await ctx.request.validateUsing(DestroyListSoalValidator)
+      const list = payload.list
+      list.forEach(async (id) => {
+        const soal = await BankSoal.find(id)
+        if (!soal) {
+          trx.rollback()
+          return FlashAndRedirect(ctx, 'error', 'Soal gagal dihapus.', 'admin.soal.page')
+        }
+        soal.delete()
+      })
+      await trx.commit()
+      return FlashAndRedirect(ctx, 'success', 'Soal berhasil dihapus.', 'admin.soal.page')
+    } catch (error) {
+      return FlashAndRedirect(
+        ctx,
+        'error',
+        error.message || 'Terjadi kesalahan saat menghapus data soal',
+        'admin.soal.page'
+      )
+    }
   }
 }

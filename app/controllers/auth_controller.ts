@@ -4,8 +4,9 @@ import { FlashAndRedirect } from '#services/general_service'
 import { LoginValidator } from '#validators/login'
 import { RedirectMap } from '#constant/location_page'
 import { RoleType } from '#types/role'
-import User from '#models/user'
 import { cuid } from '@adonisjs/core/helpers'
+import User from '#models/user'
+import Asset from '#models/asset'
 
 export default class AuthController {
   async login(ctx: HttpContext) {
@@ -34,18 +35,32 @@ export default class AuthController {
   }
 
   async upload(ctx: HttpContext) {
-    const file = ctx.request.file('file', {
-      size: '10mb',
-      extnames: ['jpg', 'png', 'jpeg'],
-    })
-    if (!file?.isValid) {
+    try {
+      const file = ctx.request.file('file', {
+        size: '10mb',
+        extnames: ['jpg', 'png', 'jpeg'],
+      })
+      if (!file?.isValid) {
+        return ctx.response.json({
+          code: 400,
+          message: 'Bad request',
+        })
+      }
+      const folderName: string = 'assets/uploads'
+      const name: string = `${cuid()}.${file.extname}`
+      await file.move(app.makePath(`public/${folderName}`), { name })
+      const url: string = `${folderName}/${name}`
+      const createAsset = await Asset.create({ url })
       return ctx.response.json({
-        code: 400,
-        message: 'Bad request',
+        code: 200,
+        message: 'Berhasil mengupload file ke server',
+        data: { assetId: createAsset.id, url },
+      })
+    } catch (error) {
+      return ctx.response.json({
+        code: 500,
+        message: error || 'Internal server error',
       })
     }
-    await file.move(app.makePath('storage/uploads'), {
-      name: `${cuid()}.${file.extname}`,
-    })
   }
 }

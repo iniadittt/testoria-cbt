@@ -58,7 +58,10 @@ export default function DashboardAdminKelas({ kelas }: { kelas: KelasType[] }) {
   const destroyData = async (event: React.MouseEvent) => {
     event.preventDefault()
     destroy(routes.as['admin.kelas.list.destroy'], {
-      onFinish: () => reset(),
+      onFinish: () => {
+        setDialogOpen(false)
+        reset()
+      },
     })
   }
 

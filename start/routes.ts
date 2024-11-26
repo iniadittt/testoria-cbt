@@ -13,9 +13,9 @@ import { middleware } from './kernel.js'
 
 const GuestController = () => import('#controllers/guests_controller')
 const AuthController = () => import('#controllers/auth_controller')
-// const SiswaController = () => import('#controllers/siswas_controller')
-// const GuruController = () => import('#controllers/gurus_controller')
-// const OperatorController = () => import('#controllers/operators_controller')
+const SiswaController = () => import('#controllers/siswas_controller')
+const GuruController = () => import('#controllers/gurus_controller')
+const OperatorController = () => import('#controllers/operators_controller')
 const AdminController = () => import('#controllers/admin_controller')
 
 router.group(() => {
@@ -81,6 +81,10 @@ router
         router.get('/', [AdminController, 'soal']).as('admin.soal.page')
         // router.get('/detail', [AdminController, 'soal_detail']).as('admin.soal.detail')
         router.get('/create', [AdminController, 'soal_create']).as('admin.soal.create')
+        router.post('/store', [AdminController, 'soal_store']).as('admin.soal.store')
+        router
+          .delete('/list/destroy', [AdminController, 'soal_list_destroy'])
+          .as('admin.soal.list.destroy')
       })
       .prefix('/soal')
   })

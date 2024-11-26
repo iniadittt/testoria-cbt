@@ -57,12 +57,15 @@ export default function DashboardAdminMataPelajaran({
     }
   }, [notification])
 
-  const { data, setData, processing, delete: destroy } = useForm<DataType>({ list: [] })
+  const { data, setData, processing, reset, delete: destroy } = useForm<DataType>({ list: [] })
 
   const destroyData = async (event: React.MouseEvent) => {
     event.preventDefault()
     destroy(routes.as['admin.matapelajaran.list.destroy'], {
-      onFinish: () => setDialogOpen(false),
+      onFinish: () => {
+        setDialogOpen(false)
+        reset()
+      },
     })
   }
 
